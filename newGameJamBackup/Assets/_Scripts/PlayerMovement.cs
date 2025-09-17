@@ -23,15 +23,26 @@ public class PlayerMovement : MonoBehaviour
     private bool isLeft;
     private bool isRight;
     private bool isGrounded;
-    //private float jumpForce = 6;
-    [SerializeField] private Vector3 jumpForce = new Vector3(0, 10, 0);
 
+    private Animator animator;
+    private CharacterController characterController;
+    private bool HasJumped;
+    private bool isFalling;
+    private bool isRunning;
+    private bool isGroundedAnim;
+    private float jumpforce = 5;
+    [SerializeField] private Vector3 jumpForce = new Vector3(0, 10, 0);
 
     private void Start()
     {
+
+        animator = GetComponent<Animator>();
         timeElapsed = 0f;
         isCentered = true;
         isGrounded = true;
+        animator.SetBool("isRunning", true);
+        isRunning = true;
+        isGroundedAnim = true;
         if (isCentered)
         {
             playerRigidBody.position = middleLane;
@@ -40,7 +51,9 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
 
-        if ((Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) && !isTransitioning)
+
+
+        if ((Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) && !isTransitioning/* && isGrounded*/)
         {
             //Jbg mora coroutine jer Lerp ne radi bez vremena
             if (isCentered)
@@ -57,7 +70,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if ((Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) && !isTransitioning)
+        if ((Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) && !isTransitioning /*&& isGrounded*/)
         {
             if (isCentered)
             {
@@ -73,19 +86,23 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if (isGrounded) {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                playerRigidBody.AddForce(jumpForce, ForceMode.Impulse);
-            }
+
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded /*&& isTransitioning*/)
+        {
+            Jump();
+            Debug.Log("isRunning"+isRunning);
+            Debug.Log("isGroundedAnim"+isGroundedAnim);
+            Debug.Log("hasjumped" +HasJumped);
         }
+
+
     }
 
     private IEnumerator MovementLeft()
     {
         //TimeElapsed je 0 na pocetku, transitioning je true da ne ulazi opet u ovu funkciju
         isTransitioning = true;
-        while (timeElapsed < transitionTime && isCentered)
+        while (timeElapsed < transitionTime && isCentered /*&& isGrounded*/)
         {
             //while se vrti pola sekunde sto se moze i smanjiti i povecati
             Vector3 startPos = new Vector3(middleLane.x, gameObject.transform.position.y, gameObject.transform.position.z);
@@ -106,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
         //TimeElapsed je 0 na pocetku, transitioning je true da ne ulazi opet u ovu funkciju
 
         isTransitioning = true;
-        while (timeElapsed < transitionTime && isCentered)
+        while (timeElapsed < transitionTime && isCentered /*&& isGrounded*/)
         {
             //while se vrti pola sekunde sto se moze i smanjiti i povecati
             Vector3 startPos = new Vector3(middleLane.x, gameObject.transform.position.y, gameObject.transform.position.z);
@@ -125,7 +142,7 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator BackToMiddleFromLeft()
     {
         isTransitioning = true;
-        while (timeElapsed < transitionTime && !isCentered)
+        while (timeElapsed < transitionTime && !isCentered /*&& isGrounded*/)
         {
             Vector3 startPos = new Vector3(leftLane.x, gameObject.transform.position.y, gameObject.transform.position.z);
             Vector3 endPos = new Vector3(middleLane.x, gameObject.transform.position.y, gameObject.transform.position.z);
@@ -142,7 +159,7 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator BackToMiddleFromRight()
     {
         isTransitioning = true;
-        while (timeElapsed < transitionTime && !isCentered)
+        while (timeElapsed < transitionTime && !isCentered /*&& isGrounded*/)
         {
             Vector3 startPos = new Vector3(rightLane.x, gameObject.transform.position.y, gameObject.transform.position.z);
             Vector3 endPos = new Vector3(middleLane.x, gameObject.transform.position.y, gameObject.transform.position.z);
@@ -156,19 +173,48 @@ public class PlayerMovement : MonoBehaviour
         isCentered = true;
     }
 
+    private void Jump()
+    {
+        //playerRigidBody.linearVelocity = new Vector3(playerRigidBody.linearVelocity.x, 0f, playerRigidBody.linearVelocity.z);
+        playerRigidBody.AddForce(Vector3.up * jumpforce, ForceMode.Impulse);
+        animator.SetBool("isRunning", false);
+        animator.SetBool("isFalling", true);
+        animator.SetBool("HasJumped", true);
+        animator.SetBool("isGroundedAnim", false);
+        isRunning = false;
+        isFalling = true;
+        HasJumped = true;
+        isGroundedAnim = false;
+        isGrounded = false;
+
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.TryGetComponent(out JumpSpace ground))
+        if (other.gameObject.TryGetComponent(out BoxCollider ground))
         {
             isGrounded = true;
+            animator.SetBool("isRunning", true);
+            animator.SetBool("isGroundedAnim",true);
+            animator.SetBool("HasJumped",false);
+            isGroundedAnim = true;
+            isRunning = true;
+            HasJumped = false;
+            Debug.Log("isRunning" + isRunning);
+            Debug.Log("isGroundedAnim" + isGroundedAnim);
+            Debug.Log("hasjumped" + HasJumped);
+            Debug.Log("Grounded");
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.TryGetComponent(out JumpSpace ground))
+        if (other.gameObject.TryGetComponent(out BoxCollider ground))
         {
             isGrounded = false;
+           
+            Debug.Log("Grounded");
         }
     }
+
 }
