@@ -24,14 +24,17 @@ public class PlayerMovement : MonoBehaviour
     private bool isRight;
     private bool isGrounded;
 
-    private Animator animator;
-    private CharacterController characterController;
-    private bool HasJumped;
-    private bool isFalling;
-    private bool isRunning;
-    private bool isGroundedAnim;
     private float jumpforce = 5;
     [SerializeField] private Vector3 jumpForce = new Vector3(0, 10, 0);
+
+    private Animator animator;                          // Animator komponenta, obavezna za animacije
+    private CharacterController characterController;    // takoder, character controller
+    private bool HasJumped;                             // bool i prijelazu u animatoru
+    private bool isFalling;                             //bool i prijelazu u animatoru
+    private bool isRunning;                             //bool i prijelazu u animatoru
+    private bool isGroundedAnim;                        //bool i prijelazu u animatoru
+
+
 
     private void Start()
     {
@@ -40,9 +43,9 @@ public class PlayerMovement : MonoBehaviour
         timeElapsed = 0f;
         isCentered = true;
         isGrounded = true;
-        animator.SetBool("isRunning", true);
-        isRunning = true;
-        isGroundedAnim = true;
+        animator.SetBool("isRunning", true);             //postavljam kao poèetnu animaciju kako bi odmah od starta krenula "run" animacija
+        isRunning = true;                               //uz svaki "SetBool" treba bit i varijabla bool
+        isGroundedAnim = true;                         // s obzirom da isGrounded koristimo kao bitan dio mehanika skakanja, nazvao sam ga slicno kako bi razlikovali ovaj bool da je vezan za samu animaciju
         if (isCentered)
         {
             playerRigidBody.position = middleLane;
@@ -90,9 +93,7 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded /*&& isTransitioning*/)
         {
             Jump();
-            Debug.Log("isRunning"+isRunning);
-            Debug.Log("isGroundedAnim"+isGroundedAnim);
-            Debug.Log("hasjumped" +HasJumped);
+            
         }
 
 
@@ -177,14 +178,14 @@ public class PlayerMovement : MonoBehaviour
     {
         //playerRigidBody.linearVelocity = new Vector3(playerRigidBody.linearVelocity.x, 0f, playerRigidBody.linearVelocity.z);
         playerRigidBody.AddForce(Vector3.up * jumpforce, ForceMode.Impulse);
-        animator.SetBool("isRunning", false);
-        animator.SetBool("isFalling", true);
-        animator.SetBool("HasJumped", true);
-        animator.SetBool("isGroundedAnim", false);
-        isRunning = false;
-        isFalling = true;
-        HasJumped = true;
-        isGroundedAnim = false;
+        animator.SetBool("isRunning", false);                            //kad skoci, u animatoru se is running postavlja na false
+        animator.SetBool("isFalling", true);                            // kad skoci pokrece se bool isFalling u smislu "u zraku je"
+        animator.SetBool("HasJumped", true);                           // kontra isGrounded-u pa mora bit provjera je li skocio
+        animator.SetBool("isGroundedAnim", false);                    // isGrounded animacija false, jer je u zraku
+        isRunning = false;                                           // popratni bool
+        isFalling = true;                                           // popratni bool
+        HasJumped = true;                                          // popratni bool
+        isGroundedAnim = false;                                   // popratni bool
         isGrounded = false;
 
     }
@@ -193,6 +194,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (other.gameObject.TryGetComponent(out BoxCollider ground))
         {
+
+            // ovdje se dogada trigger kontakt tako da sve resetiramo na kontra od onoga u "Jump()"
             isGrounded = true;
             animator.SetBool("isRunning", true);
             animator.SetBool("isGroundedAnim",true);
